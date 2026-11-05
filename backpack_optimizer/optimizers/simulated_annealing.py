@@ -1,6 +1,7 @@
 import math
 import random
 
+from backpack_optimizer.config import SimulatedAnnealingConfig
 from backpack_optimizer.models import Instance, Solution
 from backpack_optimizer.optimizers.base import Optimizer
 from backpack_optimizer.optimizers.neighborhood import create_valid_neighborhood
@@ -19,31 +20,55 @@ class SimulatedAnnealingOptimizer(Optimizer):
     ) -> None:
         super().__init__(instance)
 
-        self.initial_temperature = initial_temperature
-        self.minimum_temperature = minimum_temperature
-        self.cooling_rate = cooling_rate
-        self.iterations_per_temperature = iterations_per_temperature
-        self.max_iterations = max_iterations
-        self._validate_params()
-        self._random = random.Random(seed)
+        self._config = SimulatedAnnealingConfig(
+            initial_temperature=initial_temperature,
+            minimum_temperature=minimum_temperature,
+            cooling_rate=cooling_rate,
+            iterations_per_temperature=iterations_per_temperature,
+            max_iterations=max_iterations,
+            seed=seed,
+        )
+        self._random = random.Random(self._config.seed)
 
-    def _validate_params(self) -> None:
-        for name, value in (
-            ("initial_temperature", self.initial_temperature),
-            ("minimum_temperature", self.minimum_temperature),
-        ):
-            if not math.isfinite(value) or value <= 0:
-                raise ValueError(f"{name} must be finite and positive")
-        if self.initial_temperature <= self.minimum_temperature:
-            raise ValueError("initial_temperature must exceed minimum_temperature")
-        if not math.isfinite(self.cooling_rate) or not 0 < self.cooling_rate < 1:
-            raise ValueError("cooling_rate must be finite and between 0 and 1")
-        for name, value in (
-            ("iterations_per_temperature", self.iterations_per_temperature),
-            ("max_iterations", self.max_iterations),
-        ):
-            if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
-                raise ValueError(f"{name} must be a positive integer")
+    @property
+    def initial_temperature(self) -> float:
+        return self._config.initial_temperature
+
+    @initial_temperature.setter
+    def initial_temperature(self, value: float) -> None:
+        self._config = self._config.with_updates(initial_temperature=value)
+
+    @property
+    def minimum_temperature(self) -> float:
+        return self._config.minimum_temperature
+
+    @minimum_temperature.setter
+    def minimum_temperature(self, value: float) -> None:
+        self._config = self._config.with_updates(minimum_temperature=value)
+
+    @property
+    def cooling_rate(self) -> float:
+        return self._config.cooling_rate
+
+    @cooling_rate.setter
+    def cooling_rate(self, value: float) -> None:
+        self._config = self._config.with_updates(cooling_rate=value)
+
+    @property
+    def iterations_per_temperature(self) -> int:
+        return self._config.iterations_per_temperature
+
+    @iterations_per_temperature.setter
+    def iterations_per_temperature(self, value: int) -> None:
+        self._config = self._config.with_updates(iterations_per_temperature=value)
+
+    @property
+    def max_iterations(self) -> int:
+        return self._config.max_iterations
+
+    @max_iterations.setter
+    def max_iterations(self, value: int) -> None:
+        self._config = self._config.with_updates(max_iterations=value)
 
     def optimize(self) -> Solution:
         current_solution = Solution(items=[], instance=self.instance)

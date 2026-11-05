@@ -1,5 +1,8 @@
 from collections import Counter
 
+import pytest
+from pydantic import ValidationError
+
 from backpack_optimizer.models import Backpack, Dimensions, Instance, Item
 from backpack_optimizer.optimizers.hill_climbing import HillClimbingOptimizer
 
@@ -76,3 +79,47 @@ def test_optimizer_rejects_items_over_capacity() -> None:
     assert solution.items == [feasible]
     assert solution.value == 10
     assert solution.volume <= instance.backpack.max_volume
+
+
+@pytest.mark.parametrize(
+    ("neighborhood_size", "error_type"),
+    [
+        (-1, "greater_than_equal"),
+        (1.5, "int_type"),
+        (2.0, "int_type"),
+        (True, "int_type"),
+        (False, "int_type"),
+        ("2", "int_type"),
+        (None, "int_type"),
+    ],
+)
+@pytest.mark.parametrize("at_construction", [True, False])
+def test_rejects_invalid_neighborhood_sizes(
+    neighborhood_size: object, error_type: str, at_construction: bool
+) -> None:
+    instance = Instance(backpack=Backpack(max_volume=5), available_items=[])
+    optimizer = HillClimbingOptimizer(instance)
+
+    with pytest.raises(ValidationError) as exc_info:
+        if at_construction:
+            HillClimbingOptimizer(instance, neighborhood_size=neighborhood_size)
+        else:
+            optimizer.neighborhood_size = neighborhood_size
+
+    error = exc_info.value.errors()[0]
+    assert error["loc"] == ("neighborhood_size",)
+    assert error["type"] == error_type
+    assert optimizer.neighborhood_size == 3
+
+
+def test_zero_neighborhood_can_be_updated_to_allow_search() -> None:
+    item = Item(value=10, dimensions=Dimensions(1, 1, 1))
+    instance = Instance(backpack=Backpack(max_volume=5), available_items=[item])
+    optimizer = HillClimbingOptimizer(instance, neighborhood_size=0)
+
+    assert optimizer.optimize().items == []
+
+    optimizer.neighborhood_size = 1
+
+    assert optimizer.neighborhood_size == 1
+    assert optimizer.optimize().items == [item]

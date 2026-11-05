@@ -1,6 +1,7 @@
 from collections import Counter
 
 import pytest
+from pydantic import ValidationError
 
 from backpack_optimizer import Experiment
 from backpack_optimizer.models import Backpack, Dimensions, Instance, Item, Solution
@@ -185,13 +186,49 @@ def test_raises_when_no_subset_is_feasible() -> None:
 
 
 @pytest.mark.parametrize(
-    "max_items", [-1, 1.5, 2.0, True, False, "2", None, float("inf"), float("nan")]
+    ("max_items", "error_type"),
+    [
+        (-1, "greater_than_equal"),
+        (1.5, "int_type"),
+        (2.0, "int_type"),
+        (True, "int_type"),
+        (False, "int_type"),
+        ("2", "int_type"),
+        (None, "int_type"),
+        (float("inf"), "int_type"),
+        (float("nan"), "int_type"),
+    ],
 )
-def test_rejects_invalid_limits(max_items: object) -> None:
+@pytest.mark.parametrize("at_construction", [True, False])
+def test_rejects_invalid_limits(
+    max_items: object, error_type: str, at_construction: bool
+) -> None:
     instance = Instance(backpack=Backpack(max_volume=5), available_items=[])
+    optimizer = ExhaustiveSearchOptimizer(instance)
 
-    with pytest.raises(ValueError, match="max_items must be a non-negative integer"):
-        ExhaustiveSearchOptimizer(instance, max_items=max_items)
+    with pytest.raises(ValidationError) as exc_info:
+        if at_construction:
+            ExhaustiveSearchOptimizer(instance, max_items=max_items)
+        else:
+            optimizer.max_items = max_items
+
+    error = exc_info.value.errors()[0]
+    assert error["loc"] == ("max_items",)
+    assert error["type"] == error_type
+    assert optimizer.max_items == 20
+
+
+def test_checks_the_updated_limit_before_search() -> None:
+    item = Item(value=10, dimensions=Dimensions(1, 1, 1))
+    instance = Instance(backpack=Backpack(max_volume=5), available_items=[item, item])
+    optimizer = ExhaustiveSearchOptimizer(instance)
+    optimizer.max_items = 1
+
+    with pytest.raises(ValueError, match="2 items, exceeding max_items=1"):
+        optimizer.optimize()
+
+    optimizer.max_items = 2
+    assert optimizer.optimize().value == 20
 
 
 def test_zero_limit_allows_an_empty_instance() -> None:

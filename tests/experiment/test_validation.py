@@ -1,4 +1,5 @@
 import pytest
+from pydantic import ValidationError
 
 from backpack_optimizer import Experiment
 from backpack_optimizer.models import Instance, Solution
@@ -6,12 +7,36 @@ from backpack_optimizer.models import Instance, Solution
 from .helpers import SequenceOptimizer
 
 
-@pytest.mark.parametrize("n_repeats", [0, -1, 1.5, True, False, "2", None])
-def test_rejects_invalid_repeat_counts(instance: Instance, n_repeats: object) -> None:
+@pytest.mark.parametrize(
+    ("n_repeats", "error_type"),
+    [
+        (0, "greater_than"),
+        (-1, "greater_than"),
+        (1.5, "int_type"),
+        (2.0, "int_type"),
+        (True, "int_type"),
+        (False, "int_type"),
+        ("2", "int_type"),
+        (None, "int_type"),
+    ],
+)
+@pytest.mark.parametrize("at_construction", [True, False])
+def test_rejects_invalid_repeat_counts(
+    instance: Instance, n_repeats: object, error_type: str, at_construction: bool
+) -> None:
     optimizer = SequenceOptimizer(instance, [Solution(items=[], instance=instance)])
+    experiment = Experiment(instance, [optimizer])
 
-    with pytest.raises(ValueError, match="n_repeats must be a positive integer"):
-        Experiment(instance, [optimizer], n_repeats=n_repeats)
+    with pytest.raises(ValidationError) as exc_info:
+        if at_construction:
+            Experiment(instance, [optimizer], n_repeats=n_repeats)
+        else:
+            experiment.n_repeats = n_repeats
+
+    error = exc_info.value.errors()[0]
+    assert error["loc"] == ("n_repeats",)
+    assert error["type"] == error_type
+    assert experiment.n_repeats == 30
 
 
 def test_rejects_empty_optimizer_iterables(instance: Instance) -> None:

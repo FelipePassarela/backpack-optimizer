@@ -1,6 +1,7 @@
 from collections.abc import Iterable, Iterator
 from itertools import combinations
 
+from backpack_optimizer.config import ExhaustiveSearchConfig
 from backpack_optimizer.models import Instance, Solution
 from backpack_optimizer.optimizers.base import Optimizer
 
@@ -17,17 +18,18 @@ class ExhaustiveSearchOptimizer(Optimizer):
 
     def __init__(self, instance: Instance, max_items: int = 20) -> None:
         super().__init__(instance)
-        self.max_items = max_items
-        self._validate_params()
+        self._config = ExhaustiveSearchConfig(max_items=max_items)
+        self._validate_instance_size()
 
-    def _validate_params(self) -> None:
-        if (
-            isinstance(self.max_items, bool)
-            or not isinstance(self.max_items, int)
-            or self.max_items < 0
-        ):
-            raise ValueError("max_items must be a non-negative integer")
+    @property
+    def max_items(self) -> int:
+        return self._config.max_items
 
+    @max_items.setter
+    def max_items(self, value: int) -> None:
+        self._config = self._config.with_updates(max_items=value)
+
+    def _validate_instance_size(self) -> None:
         item_count = len(self.instance.available_items)
         if item_count > self.max_items:
             raise ValueError(
@@ -35,7 +37,7 @@ class ExhaustiveSearchOptimizer(Optimizer):
             )
 
     def optimize(self) -> Solution:
-        self._validate_params()
+        self._validate_instance_size()
         return _find_best_solution(self._generate_candidates())
 
     def _generate_candidates(self) -> Iterator[Solution]:

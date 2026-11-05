@@ -5,6 +5,7 @@ from typing import Any
 
 import numpy as np
 
+from backpack_optimizer.config import ExperimentConfig
 from backpack_optimizer.experiment.experiment_result import ExperimentResult
 from backpack_optimizer.experiment.optimization_run import OptimizationRun
 from backpack_optimizer.experiment.run_result import RunResult
@@ -18,18 +19,19 @@ class Experiment:
     ) -> None:
         self.instance = instance
         self.optimizers = tuple(optimizers)
-        self.n_repeats = n_repeats
+        self._config = ExperimentConfig(n_repeats=n_repeats)
 
-        self._validate_params()
+        self._validate_optimizers()
 
-    def _validate_params(self) -> None:
-        if (
-            isinstance(self.n_repeats, bool)
-            or not isinstance(self.n_repeats, int)
-            or self.n_repeats <= 0
-        ):
-            raise ValueError("n_repeats must be a positive integer")
+    @property
+    def n_repeats(self) -> int:
+        return self._config.n_repeats
 
+    @n_repeats.setter
+    def n_repeats(self, value: int) -> None:
+        self._config = self._config.with_updates(n_repeats=value)
+
+    def _validate_optimizers(self) -> None:
         if not self.optimizers:
             raise ValueError("optimizers must contain at least one optimizer")
         for optimizer in self.optimizers:
