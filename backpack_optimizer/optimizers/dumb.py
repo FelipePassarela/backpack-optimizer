@@ -10,6 +10,3 @@ class DumbOptimizer(Optimizer):
                 return solution
 
         return Solution(items=[], instance=self.instance)
-
-    def create_neighborhood(self, current_solution: Solution) -> list[Solution]:
-        pass

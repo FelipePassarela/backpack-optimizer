@@ -1,7 +1,7 @@
 # Backpack Optimizer
 
 Python package for maximizing the value of items in a backpack subject to a volume
-limit. Includes Hill Climbing and Simulated Annealing optimizers.
+limit. Includes Exhaustive Search, Hill Climbing, and Simulated Annealing optimizers.
 
 Requires Python 3.14 or newer and uv.
 
@@ -22,6 +22,8 @@ Create an instance, choose the optimizers, and set the number of repetitions:
 from backpack_optimizer import Experiment
 from backpack_optimizer.models import Backpack, Dimensions, Instance, Item
 from backpack_optimizer.optimizers import (
+    DumbOptimizer,
+    ExhaustiveSearchOptimizer,
     HillClimbingOptimizer,
     SimulatedAnnealingOptimizer,
 )
@@ -37,8 +39,10 @@ instance = Instance(
 experiment = Experiment(
     instance=instance,
     optimizers=[
-        HillClimbingOptimizer(instance),
-        SimulatedAnnealingOptimizer(instance),
+        ExhaustiveSearchOptimizer(instance, max_items=20),
+        HillClimbingOptimizer(instance, neighborhood_size=3),
+        SimulatedAnnealingOptimizer(instance, cooling_rate=0.95, seed=42),
+        DumbOptimizer(instance),
     ],
     n_repeats=30,
 )
@@ -51,6 +55,26 @@ best_solution = result.best_run.best_solution
 The comparison summarizes solution quality, consistency, and execution time.
 Quality statistics consider valid solutions only. `best_run` identifies the
 optimizer with the highest mean value, using execution time to break ties.
+
+## Exact reference for small instances
+
+`ExhaustiveSearchOptimizer` checks all `2**n` subsets, including the empty
+solution, and returns a feasible solution with maximum value for the same
+instance. It selects items by position, so entries with equal attributes each
+remain available once. Values and volumes use the same arithmetic and capacity
+check as `Solution`, without rounding or conversion to integers.
+
+Use this optimizer as an exact reference for checking heuristics on small
+instances. Its cost is exponential: `O(n * 2**n)` time and `O(n)` auxiliary
+memory. Each repetition in an `Experiment` performs the full search again.
+
+`max_items` defaults to **20** and accepts non-negative integers, excluding
+booleans. Zero allows only an empty instance. Invalid limits or instances above
+the limit raise `ValueError` at construction. The limit is checked again before
+each search in case the item list or limit changed. Increase it explicitly only
+for small instances where the exponential cost is acceptable; a rejected search
+never returns a partial result as an optimum. If no subset satisfies the model's
+capacity check, `optimize()` raises `ValueError`.
 
 ## Development
 

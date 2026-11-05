@@ -2,6 +2,7 @@ from backpack_optimizer.experiment import Experiment, present_experiment_result
 from backpack_optimizer.models import Backpack, Dimensions, Instance, Item
 from backpack_optimizer.models.presenter import present_instance
 from backpack_optimizer.optimizers import (
+    ExhaustiveSearchOptimizer,
     HillClimbingOptimizer,
     SimulatedAnnealingOptimizer,
     DumbOptimizer,
@@ -39,6 +40,7 @@ def main() -> None:
             seed=None,
         ),
         HillClimbingOptimizer(instance=instance),
+        ExhaustiveSearchOptimizer(instance=instance),
         DumbOptimizer(instance=instance),
     ]
     experiment = Experiment(instance=instance, optimizers=optimizers, n_repeats=30)
