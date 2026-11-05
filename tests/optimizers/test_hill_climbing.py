@@ -1,10 +1,7 @@
 from collections import Counter
 
-from backpack import Backpack
-from dimensions import Dimensions
-from instance import Instance
-from item import Item
-from optimizer.hill_climbing import HillClimbingOptimizer
+from backpack_optimizer.models import Backpack, Dimensions, Instance, Item
+from backpack_optimizer.optimizers.hill_climbing import HillClimbingOptimizer
 
 
 def test_empty_instance_returns_empty_solution() -> None:

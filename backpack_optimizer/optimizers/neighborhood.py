@@ -1,5 +1,4 @@
-from item import Item
-from solution import Solution
+from backpack_optimizer.models import Item, Solution
 
 
 def create_valid_neighborhood(

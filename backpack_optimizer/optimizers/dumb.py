@@ -1,5 +1,5 @@
-from optimizer.base import Optimizer
-from solution import Solution
+from backpack_optimizer.models import Solution
+from backpack_optimizer.optimizers.base import Optimizer
 
 
 class DumbOptimizer(Optimizer):

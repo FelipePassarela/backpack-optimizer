@@ -1,10 +1,9 @@
 import math
 import random
 
-from instance import Instance
-from optimizer.base import Optimizer
-from optimizer.neighborhood import create_valid_neighborhood
-from solution import Solution
+from backpack_optimizer.models import Instance, Solution
+from backpack_optimizer.optimizers.base import Optimizer
+from backpack_optimizer.optimizers.neighborhood import create_valid_neighborhood
 
 
 class SimulatedAnnealingOptimizer(Optimizer):

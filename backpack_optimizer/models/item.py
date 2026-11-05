@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from dimensions import Dimensions
+from backpack_optimizer.models.dimensions import Dimensions
 
 
 @dataclass(frozen=True)

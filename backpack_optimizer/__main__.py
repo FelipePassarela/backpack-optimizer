@@ -1,8 +1,5 @@
-from backpack import Backpack
-from dimensions import Dimensions
-from instance import Instance
-from item import Item
-from optimizer import SimulatedAnnealingOptimizer
+from backpack_optimizer.models import Backpack, Dimensions, Instance, Item
+from backpack_optimizer.optimizers import SimulatedAnnealingOptimizer
 
 
 def main() -> None:

@@ -2,12 +2,8 @@ from collections import Counter
 
 import pytest
 
-from backpack import Backpack
-from dimensions import Dimensions
-from instance import Instance
-from item import Item
-from optimizer import SimulatedAnnealingOptimizer
-from solution import Solution
+from backpack_optimizer.models import Backpack, Dimensions, Instance, Item, Solution
+from backpack_optimizer.optimizers import SimulatedAnnealingOptimizer
 
 
 def test_empty_instance_returns_empty_solution() -> None:

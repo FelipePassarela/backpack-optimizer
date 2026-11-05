@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
-from instance import Instance
-from solution import Solution
+from backpack_optimizer.models import Instance, Solution
 
 
 class Optimizer(ABC):
