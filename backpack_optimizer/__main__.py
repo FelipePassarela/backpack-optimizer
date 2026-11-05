@@ -1,5 +1,10 @@
+from backpack_optimizer.experiment import Experiment, present_experiment_result
 from backpack_optimizer.models import Backpack, Dimensions, Instance, Item
-from backpack_optimizer.optimizers import SimulatedAnnealingOptimizer
+from backpack_optimizer.models.presenter import present_instance
+from backpack_optimizer.optimizers import (
+    HillClimbingOptimizer,
+    SimulatedAnnealingOptimizer,
+)
 
 
 def main() -> None:
@@ -18,25 +23,26 @@ def main() -> None:
             Item(value=7.5, dimensions=Dimensions(width=5, height=5, depth=10)),
         ],
     )
-    optimizer = SimulatedAnnealingOptimizer(
-        instance=instance,
-        initial_temperature=100.0,
-        minimum_temperature=0.1,
-        cooling_rate=0.95,
-        iterations_per_temperature=100,
-        max_iterations=20_000,
-        seed=42,
-    )
-    solution = optimizer.optimize()
 
     print("Available items:")
-    print(instance.backpack)
-    print(instance.to_dataframe())
+    print(present_instance(instance))
 
-    print("\nFound solution:")
-    print(solution.to_dataframe())
-    print(f"Total value: {solution.value}")
-    print(f"Total volume: {solution.volume}")
+    optimizers = [
+        SimulatedAnnealingOptimizer(
+            instance=instance,
+            initial_temperature=100.0,
+            minimum_temperature=0.1,
+            cooling_rate=0.95,
+            iterations_per_temperature=100,
+            max_iterations=20_000,
+            seed=None,
+        ),
+        HillClimbingOptimizer(instance=instance),
+    ]
+    experiment = Experiment(instance=instance, optimizers=optimizers, n_repeats=30)
+    result = experiment.run()
+
+    print(present_experiment_result(result))
 
 
 if __name__ == "__main__":
