@@ -4,6 +4,7 @@ from backpack_optimizer.models.presenter import present_instance
 from backpack_optimizer.optimizers import (
     HillClimbingOptimizer,
     SimulatedAnnealingOptimizer,
+    DumbOptimizer,
 )
 
 
@@ -38,6 +39,7 @@ def main() -> None:
             seed=None,
         ),
         HillClimbingOptimizer(instance=instance),
+        DumbOptimizer(instance=instance),
     ]
     experiment = Experiment(instance=instance, optimizers=optimizers, n_repeats=30)
     result = experiment.run()
