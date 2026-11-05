@@ -1,5 +1,6 @@
 import random
 
+from backpack_optimizer.config import HillClimbingConfig
 from backpack_optimizer.models import Instance, Solution
 from backpack_optimizer.optimizers.base import Optimizer
 from backpack_optimizer.optimizers.neighborhood import create_valid_neighborhood
@@ -8,7 +9,15 @@ from backpack_optimizer.optimizers.neighborhood import create_valid_neighborhood
 class HillClimbingOptimizer(Optimizer):
     def __init__(self, instance: Instance, neighborhood_size: int = 3) -> None:
         super().__init__(instance)
-        self.neighborhood_size = neighborhood_size
+        self._config = HillClimbingConfig(neighborhood_size=neighborhood_size)
+
+    @property
+    def neighborhood_size(self) -> int:
+        return self._config.neighborhood_size
+
+    @neighborhood_size.setter
+    def neighborhood_size(self, value: int) -> None:
+        self._config = self._config.with_updates(neighborhood_size=value)
 
     def optimize(self) -> Solution:
         current_solution = Solution(items=[], instance=self.instance)

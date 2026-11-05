@@ -9,6 +9,3 @@ class Optimizer(ABC):
 
     @abstractmethod
     def optimize(self) -> Solution: ...
-
-    @abstractmethod
-    def create_neighborhood(self, current_solution: Solution) -> list[Solution]: ...

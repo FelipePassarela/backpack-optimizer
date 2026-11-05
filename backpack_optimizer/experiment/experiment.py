@@ -5,9 +5,10 @@ from typing import Any
 
 import numpy as np
 
+from backpack_optimizer.config import ExperimentConfig
 from backpack_optimizer.experiment.experiment_result import ExperimentResult
 from backpack_optimizer.experiment.optimization_run import OptimizationRun
-from backpack_optimizer.experiment.run_result import RunResult
+from backpack_optimizer.experiment.optimizer_result import OptimizerResult
 from backpack_optimizer.models import Instance, Item, Solution
 from backpack_optimizer.optimizers import Optimizer
 
@@ -18,18 +19,19 @@ class Experiment:
     ) -> None:
         self.instance = instance
         self.optimizers = tuple(optimizers)
-        self.n_repeats = n_repeats
+        self._config = ExperimentConfig(n_repeats=n_repeats)
 
-        self._validate_params()
+        self._validate_optimizers()
 
-    def _validate_params(self) -> None:
-        if (
-            isinstance(self.n_repeats, bool)
-            or not isinstance(self.n_repeats, int)
-            or self.n_repeats <= 0
-        ):
-            raise ValueError("n_repeats must be a positive integer")
+    @property
+    def n_repeats(self) -> int:
+        return self._config.n_repeats
 
+    @n_repeats.setter
+    def n_repeats(self, value: int) -> None:
+        self._config = self._config.with_updates(n_repeats=value)
+
+    def _validate_optimizers(self) -> None:
         if not self.optimizers:
             raise ValueError("optimizers must contain at least one optimizer")
         for optimizer in self.optimizers:
@@ -40,13 +42,15 @@ class Experiment:
 
     def run(self) -> ExperimentResult:
         """Return fresh results, reusing the supplied optimizers and their RNG state."""
-        runs = []
+        optimizer_results = []
         for index, optimizer in enumerate(self.optimizers, start=1):
-            run_result = self._run_optimizer(optimizer, index)
-            runs.append(run_result)
-        return ExperimentResult(run_results=runs)
+            optimizer_result = self._run_optimizer(optimizer, index)
+            optimizer_results.append(optimizer_result)
+        return ExperimentResult(optimizer_results=optimizer_results)
 
-    def _run_optimizer(self, optimizer: Optimizer, optimizer_id: int) -> RunResult:
+    def _run_optimizer(
+        self, optimizer: Optimizer, optimizer_id: int
+    ) -> OptimizerResult:
         executions = []
         available_items = Counter(self.instance.available_items)
 
@@ -65,22 +69,22 @@ class Experiment:
             )
             executions.append(optimization_run)
 
-        return self._create_run_results(executions, optimizer, optimizer_id)
+        return self._create_optimizer_result(executions, optimizer, optimizer_id)
 
     def _check_inconsistent_instances(self, solution: Solution) -> None:
         if solution.instance is not self.instance:
             raise ValueError("Optimizer returned a solution for another instance")
 
-    def _create_run_results(
+    def _create_optimizer_result(
         self, executions: list[Any], optimizer: Optimizer, optimizer_id: int
-    ) -> RunResult:
+    ) -> OptimizerResult:
         valid_solutions = [
             execution.solution for execution in executions if execution.is_valid
         ]
         values = [solution.value for solution in valid_solutions]
         volumes = [solution.volume for solution in valid_solutions]
 
-        return RunResult(
+        return OptimizerResult(
             instance=self.instance,
             optimizer=optimizer,
             mean_value=float(np.mean(values)) if values else float("nan"),
