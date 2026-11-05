@@ -12,6 +12,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "pandas" },
+    { name = "pytest" },
 ]
 
 [package.dev-dependencies]
@@ -20,7 +21,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pandas", specifier = ">=3.1.1" }]
+requires-dist = [
+    { name = "pandas", specifier = ">=3.1.1" },
+    { name = "pytest", specifier = ">=9.2.0" },
+]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=9.2.0" }]

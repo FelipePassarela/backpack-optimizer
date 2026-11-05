@@ -2,7 +2,7 @@ from backpack import Backpack
 from dimensions import Dimensions
 from instance import Instance
 from item import Item
-from optimizer.hill_climbing import HillClimbingOptimizer
+from optimizer import SimulatedAnnealingOptimizer
 
 
 def main() -> None:
@@ -21,7 +21,15 @@ def main() -> None:
             Item(value=7.5, dimensions=Dimensions(width=5, height=5, depth=10)),
         ],
     )
-    optimizer = HillClimbingOptimizer(instance=instance)
+    optimizer = SimulatedAnnealingOptimizer(
+        instance=instance,
+        initial_temperature=100.0,
+        minimum_temperature=0.1,
+        cooling_rate=0.95,
+        iterations_per_temperature=100,
+        max_iterations=20_000,
+        seed=42,
+    )
     solution = optimizer.optimize()
 
     print("Available items:")
