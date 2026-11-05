@@ -2,39 +2,39 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from backpack_optimizer.experiment.run_result import RunResult
+from backpack_optimizer.experiment.optimizer_result import OptimizerResult
 from backpack_optimizer.models import Instance
 
 
 @dataclass
 class ExperimentResult:
-    run_results: list[RunResult]
+    optimizer_results: list[OptimizerResult]
 
     def to_dataframe(self) -> pd.DataFrame:
         """Compare optimizers by descending mean value, then ascending time."""
         data = []
-        for run in self.run_results:
+        for optimizer_result in self.optimizer_results:
             data.append(
                 {
-                    "Optimizer ID": run.optimizer_id,
-                    "Optimizer": run.optimizer.__class__.__name__,
-                    "Mean Value": run.mean_value,
-                    "Median Value": run.median_value,
-                    "Std Value": run.std_value,
+                    "Optimizer ID": optimizer_result.optimizer_id,
+                    "Optimizer": optimizer_result.optimizer.__class__.__name__,
+                    "Mean Value": optimizer_result.mean_value,
+                    "Median Value": optimizer_result.median_value,
+                    "Std Value": optimizer_result.std_value,
                     "Best Value": (
-                        run.best_solution.value
-                        if run.best_solution is not None
+                        optimizer_result.best_solution.value
+                        if optimizer_result.best_solution is not None
                         else float("nan")
                     ),
-                    "Worst Value": run.worst_value,
-                    "Mean Volume": run.mean_volume,
-                    "Std Volume": run.std_volume,
-                    "Mean Time (s)": run.mean_time,
-                    "Std Time (s)": run.std_time,
-                    "Total Time (s)": run.total_time,
-                    "Num Repeats": run.n_repeats,
-                    "Valid Repeats": run.n_valid,
-                    "Valid (%)": run.valid_percentage,
+                    "Worst Value": optimizer_result.worst_value,
+                    "Mean Volume": optimizer_result.mean_volume,
+                    "Std Volume": optimizer_result.std_volume,
+                    "Mean Time (s)": optimizer_result.mean_time,
+                    "Std Time (s)": optimizer_result.std_time,
+                    "Total Time (s)": optimizer_result.total_time,
+                    "Num Repeats": optimizer_result.n_repeats,
+                    "Valid Repeats": optimizer_result.n_valid,
+                    "Valid (%)": optimizer_result.valid_percentage,
                 }
             )
 
@@ -54,25 +54,31 @@ class ExperimentResult:
         return pd.DataFrame(
             [
                 {
-                    "Optimizer ID": run.optimizer_id,
-                    "Optimizer": run.optimizer.__class__.__name__,
+                    "Optimizer ID": optimizer_result.optimizer_id,
+                    "Optimizer": optimizer_result.optimizer.__class__.__name__,
                     "Repetition": execution.repetition,
                     "Value": execution.solution.value,
                     "Volume": execution.solution.volume,
                     "Valid": execution.is_valid,
                     "Time (s)": execution.elapsed_seconds,
                 }
-                for run in self.run_results
-                for execution in run.executions
+                for optimizer_result in self.optimizer_results
+                for execution in optimizer_result.executions
             ]
         )
 
     @property
-    def best_run(self) -> RunResult:
+    def best_optimizer_result(self) -> OptimizerResult:
         """Select the highest mean value, breaking ties by mean execution time."""
-        valid_runs = [run for run in self.run_results if run.best_solution is not None]
+        valid_results = [
+            result
+            for result in self.optimizer_results
+            if result.best_solution is not None
+        ]
         best = max(
-            valid_runs, key=lambda run: (run.mean_value, -run.mean_time), default=None
+            valid_results,
+            key=lambda result: (result.mean_value, -result.mean_time),
+            default=None,
         )
         if best is None:
             raise ValueError("No valid solutions were found in this experiment")
@@ -80,4 +86,4 @@ class ExperimentResult:
 
     @property
     def instance(self) -> Instance:
-        return self.best_run.instance
+        return self.best_optimizer_result.instance

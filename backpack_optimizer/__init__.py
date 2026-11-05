@@ -4,7 +4,7 @@ from backpack_optimizer.experiment import (
     Experiment,
     ExperimentResult,
     OptimizationRun,
-    RunResult,
+    OptimizerResult,
 )
 
-__all__ = ["Experiment", "ExperimentResult", "OptimizationRun", "RunResult"]
+__all__ = ["Experiment", "ExperimentResult", "OptimizationRun", "OptimizerResult"]

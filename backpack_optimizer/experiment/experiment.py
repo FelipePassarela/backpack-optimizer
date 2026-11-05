@@ -8,7 +8,7 @@ import numpy as np
 from backpack_optimizer.config import ExperimentConfig
 from backpack_optimizer.experiment.experiment_result import ExperimentResult
 from backpack_optimizer.experiment.optimization_run import OptimizationRun
-from backpack_optimizer.experiment.run_result import RunResult
+from backpack_optimizer.experiment.optimizer_result import OptimizerResult
 from backpack_optimizer.models import Instance, Item, Solution
 from backpack_optimizer.optimizers import Optimizer
 
@@ -42,13 +42,15 @@ class Experiment:
 
     def run(self) -> ExperimentResult:
         """Return fresh results, reusing the supplied optimizers and their RNG state."""
-        runs = []
+        optimizer_results = []
         for index, optimizer in enumerate(self.optimizers, start=1):
-            run_result = self._run_optimizer(optimizer, index)
-            runs.append(run_result)
-        return ExperimentResult(run_results=runs)
+            optimizer_result = self._run_optimizer(optimizer, index)
+            optimizer_results.append(optimizer_result)
+        return ExperimentResult(optimizer_results=optimizer_results)
 
-    def _run_optimizer(self, optimizer: Optimizer, optimizer_id: int) -> RunResult:
+    def _run_optimizer(
+        self, optimizer: Optimizer, optimizer_id: int
+    ) -> OptimizerResult:
         executions = []
         available_items = Counter(self.instance.available_items)
 
@@ -67,22 +69,22 @@ class Experiment:
             )
             executions.append(optimization_run)
 
-        return self._create_run_results(executions, optimizer, optimizer_id)
+        return self._create_optimizer_result(executions, optimizer, optimizer_id)
 
     def _check_inconsistent_instances(self, solution: Solution) -> None:
         if solution.instance is not self.instance:
             raise ValueError("Optimizer returned a solution for another instance")
 
-    def _create_run_results(
+    def _create_optimizer_result(
         self, executions: list[Any], optimizer: Optimizer, optimizer_id: int
-    ) -> RunResult:
+    ) -> OptimizerResult:
         valid_solutions = [
             execution.solution for execution in executions if execution.is_valid
         ]
         values = [solution.value for solution in valid_solutions]
         volumes = [solution.volume for solution in valid_solutions]
 
-        return RunResult(
+        return OptimizerResult(
             instance=self.instance,
             optimizer=optimizer,
             mean_value=float(np.mean(values)) if values else float("nan"),

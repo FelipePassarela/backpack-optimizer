@@ -8,7 +8,7 @@ from backpack_optimizer.optimizers import Optimizer
 
 
 @dataclass
-class RunResult:
+class OptimizerResult:
     """Aggregate results for one optimizer entry in an experiment.
 
     Value and volume statistics include only valid solutions. Time statistics
@@ -56,12 +56,16 @@ class RunResult:
 
     @property
     def mean_time(self) -> float:
-        return float(np.mean([run.elapsed_seconds for run in self.executions]))
+        return float(
+            np.mean([execution.elapsed_seconds for execution in self.executions])
+        )
 
     @property
     def std_time(self) -> float:
-        return float(np.std([run.elapsed_seconds for run in self.executions]))
+        return float(
+            np.std([execution.elapsed_seconds for execution in self.executions])
+        )
 
     @property
     def total_time(self) -> float:
-        return sum(run.elapsed_seconds for run in self.executions)
+        return sum(execution.elapsed_seconds for execution in self.executions)

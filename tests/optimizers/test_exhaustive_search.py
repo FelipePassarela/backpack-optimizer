@@ -302,12 +302,12 @@ def test_runs_in_experiment_as_an_exact_reference_without_a_neighborhood() -> No
 
     result = experiment.run()
 
-    exact_run = result.run_results[0]
-    assert exact_run.optimizer is exact
-    assert exact_run.instance is instance
-    assert exact_run.n_valid == 2
-    assert exact_run.mean_value == 11
-    assert exact_run.std_value == 0
-    assert all(execution.solution.value == 11 for execution in exact_run.executions)
+    exact_result = result.optimizer_results[0]
+    assert exact_result.optimizer is exact
+    assert exact_result.instance is instance
+    assert exact_result.n_valid == 2
+    assert exact_result.mean_value == 11
+    assert exact_result.std_value == 0
+    assert all(execution.solution.value == 11 for execution in exact_result.executions)
     assert result.executions_to_dataframe()["Valid"].all()
-    assert result.best_run.best_solution.value == 11
+    assert result.best_optimizer_result.best_solution.value == 11

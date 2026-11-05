@@ -24,10 +24,12 @@ def test_summary_exports_aggregated_statistics(known_experiment: Experiment) -> 
     assert summary["Total Time (s)"].tolist() == [6, 1.5]
 
 
-def test_best_run_has_highest_mean_value(known_experiment: Experiment) -> None:
+def test_best_optimizer_result_has_highest_mean_value(
+    known_experiment: Experiment,
+) -> None:
     result = known_experiment.run()
 
-    assert result.best_run is result.run_results[0]
+    assert result.best_optimizer_result is result.optimizer_results[0]
 
 
 def test_exports_each_repetition(known_experiment: Experiment) -> None:
@@ -55,7 +57,12 @@ def test_ranking_uses_mean_value_then_time_for_same_algorithm_entries(
 
     result = Experiment(instance, optimizers, n_repeats=1).run()
 
-    assert result.best_run.optimizer is optimizers[1]
+    assert result.best_optimizer_result.optimizer is optimizers[1]
     assert result.to_dataframe()["Optimizer ID"].tolist() == [2, 1, 3]
-    for run in result.run_results:
-        assert run.std_value == run.std_volume == run.std_time == 0
+    for optimizer_result in result.optimizer_results:
+        assert (
+            optimizer_result.std_value
+            == optimizer_result.std_volume
+            == optimizer_result.std_time
+            == 0
+        )

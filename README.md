@@ -49,32 +49,22 @@ experiment = Experiment(
 result = experiment.run()
 
 print(result.to_dataframe())
-best_solution = result.best_run.best_solution
+best_solution = result.best_optimizer_result.best_solution
 ```
 
 The comparison summarizes solution quality, consistency, and execution time.
-Quality statistics consider valid solutions only. `best_run` identifies the
-optimizer with the highest mean value, using execution time to break ties.
+Each `OptimizationRun` records one repetition. An `OptimizerResult` groups all
+repetitions of one optimizer, and `ExperimentResult.optimizer_results` contains
+these results.
+
+Quality statistics consider valid solutions only. `best_optimizer_result`
+identifies the optimizer with the highest mean value, using execution time to
+break ties.
 
 ## Parameter validation
 
-Optimizers and `Experiment` validate scalar parameters with Pydantic at
-construction and when public parameter attributes are assigned new values.
-Invalid parameters raise `pydantic.ValidationError` (a subclass of `ValueError`);
-a rejected assignment leaves the previous configuration unchanged.
-
-| Component | Parameter rules |
-| --- | --- |
-| Exhaustive Search | `max_items` is an integer >= 0 (default: 20). |
-| Hill Climbing | `neighborhood_size` is an integer >= 0 (default: 3); zero produces an empty neighborhood. |
-| Simulated Annealing | Temperatures are finite and positive, with `initial_temperature > minimum_temperature`; `cooling_rate` is finite and strictly between 0 and 1; iteration counts are positive integers; `seed` is an integer or `None`. |
-| Experiment | `n_repeats` is a positive integer (default: 30). |
-
-Integer parameters reject booleans, floats, and strings. Temperature and cooling
-parameters accept integers and floats, rejecting booleans, strings, NaN, and
-infinity. Instance checks, such as item availability and matching optimizer
-instances, remain separate from parameter validation. Updating search parameters
-does not reset the Simulated Annealing random generator.
+Optimizers and `Experiment` validate parameters on construction and assignment.
+Invalid values raise `pydantic.ValidationError` (a subclass of `ValueError`).
 
 ## Exact reference for small instances
 
